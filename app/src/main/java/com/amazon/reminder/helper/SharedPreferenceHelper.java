@@ -46,16 +46,31 @@ public class SharedPreferenceHelper {
         }
     }
 
-    public List<ReminderModel> getReminders() {
+    public List<ReminderModel> getReminders(String filterByTitle) {
         List<ReminderModel> reminderModels = new ArrayList<>();
         Map<String, ?> keys = preferences.getAll();
         for (String key: keys.keySet()) {
             if (key.startsWith(REMINDER_PREFIX)) {
                 String reminderModelString = (String) keys.get(key);
-                reminderModels.add(gson.fromJson(reminderModelString, ReminderModel.class));
+                ReminderModel model = gson.fromJson(reminderModelString, ReminderModel.class);
+                if (isFilteredOut(model, filterByTitle)) {
+                    reminderModels.add(model);
+                }
             }
         }
         return reminderModels;
+    }
+
+    private boolean isFilteredOut(ReminderModel model, String filterByTitle) {
+        if (model.getTitle() == null || model.getTitle().isEmpty())  {
+            return false;
+        }
+
+        if (filterByTitle == null || model.getTitle().toLowerCase().contains(filterByTitle)) {
+            return true;
+        }
+
+        return false;
     }
 
     public void saveReminder(ReminderModel reminderModel) {

@@ -10,16 +10,34 @@
         android:id="@+id/reminders_list"
         android:scrollbars="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="wrap_content"/>
+    <Button
+        android:id="@+id/clearFilter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/reminders_list"
+        android:text="Clear filter"
+        android:visibility="invisible"
+        android:onClick="clearFilter"
+        android:layout_centerInParent="true"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
-        android:src="@drawable/ic_baseline_alarm_add"
+        android:layout_toLeftOf="@+id/fabSearch"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:onClick="addReminder"
-        android:layout_margin="16dp" />
+        android:src="@drawable/ic_baseline_alarm_add"
+        android:onClick="addReminder" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:src="@drawable/ic_baseline_search"
+        android:layout_alignParentBottom="true"
+        android:onClick="initSearchReminder" />
 </RelativeLayout>

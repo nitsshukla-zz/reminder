@@ -1,5 +1,7 @@
 package com.amazon.reminder;
 
+import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -7,6 +9,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -35,14 +39,19 @@ public class MainActivity extends RoboActivity {
     @Inject Gson gson;
 
     @InjectView(R.id.reminders_list) RecyclerView recyclerView;
+    @InjectView(R.id.clearFilter) Button clearFilter;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
+    private AlertDialog searchDialog;
 
     @Override
     protected void onResume() {
         super.onResume();
-        List<ReminderModel> reminders = sharedPreferenceHelper.getReminders();
-        //mAdapter = new MyAdapter(new String[]{"Code review", "Design review"});
+        listReminders(null);
+    }
+
+    private void listReminders(String filterByTitle) {
+        List<ReminderModel> reminders = sharedPreferenceHelper.getReminders(filterByTitle);
         mAdapter = new MyAdapter(reminders, this);
         recyclerView.setAdapter(mAdapter);
     }
@@ -80,6 +89,34 @@ public class MainActivity extends RoboActivity {
         }
     }
 
+    public void searchReminder(View view) {
+        EditText editText = (EditText) searchDialog.findViewById(R.id.searchText);
+        String text = editText.getText().toString();
+        listReminders(text);
+        clearFilter.setVisibility(View.VISIBLE);
+        searchDialog.cancel();
+    }
+
+    public void cancelSearchReminder(View view) {
+        searchDialog.cancel();
+    }
+
+    public void initSearchReminder(View view) {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.search_dialog , null);
+        alertDialogBuilder.setView(layout);
+        alertDialogBuilder.setTitle("Search reminders");
+        alertDialogBuilder.setIcon(R.drawable.icons_alarm);
+        searchDialog = alertDialogBuilder.create();
+        searchDialog.show();
+    }
+
+    public void clearFilter(View view) {
+        listReminders(null);
+        clearFilter.setVisibility(View.INVISIBLE);
+    }
+
     static class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         private List<ReminderModel> reminders;
         private MainActivity mainActivity;
@@ -100,11 +137,6 @@ public class MainActivity extends RoboActivity {
                 relativeLayout = v;
             }
         }
-
-        // Provide a suitable constructor (depends on the kind of dataset)
-        /*MyAdapter(String[] myDataset) {
-            mDataset = myDataset;
-        }*/
 
         // Create new views (invoked by the layout manager)
         @Override
