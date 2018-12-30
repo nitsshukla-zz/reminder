@@ -1,4 +1,4 @@
-package com.amazon.reminder;
+package com.amazon.reminder.activity;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
@@ -10,6 +10,8 @@ import android.widget.EditText;
 import android.widget.TimePicker;
 import android.widget.Toolbar;
 
+import com.amazon.reminder.R;
+import com.amazon.reminder.ReminderApplication;
 import com.amazon.reminder.helper.ReminderJobHelper;
 import com.amazon.reminder.helper.SharedPreferenceHelper;
 import com.amazon.reminder.model.ReminderModel;

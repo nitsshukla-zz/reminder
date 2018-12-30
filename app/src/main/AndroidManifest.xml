@@ -15,14 +15,14 @@
         <meta-data
             android:name = "roboguice.modules"
             android:value = "com.amazon.reminder.ReminderModule" />
-        <activity android:name=".MainActivity">
+        <activity android:name=".activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".AddReminderActivity"></activity>
+        <activity android:name=".activity.AddReminderActivity"></activity>
         <service android:name=".service.ReminderService"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>

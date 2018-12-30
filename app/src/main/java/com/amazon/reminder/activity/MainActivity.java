@@ -1,4 +1,4 @@
-package com.amazon.reminder;
+package com.amazon.reminder.activity;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -17,6 +17,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amazon.reminder.R;
 import com.amazon.reminder.helper.SharedPreferenceHelper;
 import com.amazon.reminder.model.ReminderModel;
 import com.google.gson.Gson;
@@ -28,10 +29,10 @@ import roboguice.activity.RoboActivity;
 import roboguice.inject.ContentView;
 import roboguice.inject.InjectView;
 
-import static com.amazon.reminder.AddReminderActivity.REMINDER_MODE;
-import static com.amazon.reminder.AddReminderActivity.REMINDER_MODEL_STRING;
-import static com.amazon.reminder.AddReminderActivity.REMINDER_MODE_EDIT;
-import static com.amazon.reminder.AddReminderActivity.REMINDER_MODE_NEW;
+import static com.amazon.reminder.activity.AddReminderActivity.REMINDER_MODE;
+import static com.amazon.reminder.activity.AddReminderActivity.REMINDER_MODEL_STRING;
+import static com.amazon.reminder.activity.AddReminderActivity.REMINDER_MODE_EDIT;
+import static com.amazon.reminder.activity.AddReminderActivity.REMINDER_MODE_NEW;
 
 @ContentView(R.layout.activity_main)
 public class MainActivity extends RoboActivity {
@@ -52,7 +53,7 @@ public class MainActivity extends RoboActivity {
 
     private void listReminders(String filterByTitle) {
         List<ReminderModel> reminders = sharedPreferenceHelper.getReminders(filterByTitle);
-        mAdapter = new MyAdapter(reminders, this);
+        mAdapter = new ReminderAdapter(reminders, this);
         recyclerView.setAdapter(mAdapter);
     }
 
@@ -80,7 +81,7 @@ public class MainActivity extends RoboActivity {
     }
 
     public void toggleReminder(ImageView view, ReminderModel reminder) {
-        Toast.makeText(this, ""+ reminder.isEnabled(), 1000).show();
+        Toast.makeText(this, ""+ reminder.isEnabled(),1000).show();
         reminder.setEnabled(!reminder.isEnabled());
         if (reminder.isEnabled()) {
             view.setImageDrawable(getResources().getDrawable(R.drawable.ic_baseline_alarm_on));
@@ -117,11 +118,11 @@ public class MainActivity extends RoboActivity {
         clearFilter.setVisibility(View.INVISIBLE);
     }
 
-    static class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
+    static class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.MyViewHolder> {
         private List<ReminderModel> reminders;
         private MainActivity mainActivity;
 
-        public MyAdapter(List<ReminderModel> reminders, MainActivity mainActivity) {
+        public ReminderAdapter(List<ReminderModel> reminders, MainActivity mainActivity) {
             this.reminders = reminders;
             this.mainActivity = mainActivity;
         }
@@ -140,33 +141,33 @@ public class MainActivity extends RoboActivity {
 
         // Create new views (invoked by the layout manager)
         @Override
-        public MyAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent,
-                                                         int viewType) {
+        public ReminderAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent,
+                                                               int viewType) {
             // create a new view
             RelativeLayout v = (RelativeLayout) LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.reminder, parent, false);
-            return new MyViewHolder(v);
+            return new ReminderAdapter.MyViewHolder(v);
         }
 
         // Replace the contents of a view (invoked by the layout manager)
         @Override
-        public void onBindViewHolder(MyViewHolder holder, int position) {
+        public void onBindViewHolder(ReminderAdapter.MyViewHolder holder, int position) {
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
             //holder.mTextView.setText(mDataset[position]);
             ReminderModel reminder = reminders.get(position);
-            TextView tv = (TextView)holder.relativeLayout.findViewById(R.id.title);
+            TextView tv = holder.relativeLayout.findViewById(R.id.title);
             tv.setText(reminder.getTitle());
 
-            TextView dateTv = (TextView) holder.relativeLayout.findViewById(R.id.reminder_date);
+            TextView dateTv = holder.relativeLayout.findViewById(R.id.reminder_date);
             dateTv.setText(reminder.getDateInString());
 
-            LinearLayout linearLayout = (LinearLayout) holder.relativeLayout.findViewById(R.id.reminder_ll);
+            LinearLayout linearLayout = holder.relativeLayout.findViewById(R.id.reminder_ll);
             linearLayout.setOnClickListener((view) -> {
                 mainActivity.editReminder(reminder);
             });
 
-            ImageView img = (ImageView) holder.relativeLayout.findViewById(R.id.toggleImgReminder);
+            ImageView img = holder.relativeLayout.findViewById(R.id.toggleImgReminder);
             img.setOnClickListener((view) -> {
                 mainActivity.toggleReminder(img, reminder);
             });

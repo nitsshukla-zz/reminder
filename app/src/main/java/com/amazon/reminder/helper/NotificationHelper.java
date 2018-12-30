@@ -6,7 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
-import com.amazon.reminder.MainActivity;
+import com.amazon.reminder.activity.MainActivity;
 import com.amazon.reminder.R;
 import com.google.inject.Inject;
 

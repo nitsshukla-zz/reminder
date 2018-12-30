@@ -35,6 +35,7 @@ public class SharedPreferenceHelper {
     }
 
     private void setString(final String key, final String value) {
+        System.out.println(value);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString(key, value);
         commitEditor(editor, "key : " + key + ", value : " + value);
@@ -80,7 +81,7 @@ public class SharedPreferenceHelper {
         setString(REMINDER_PREFIX + reminderModel.getId(), gson.toJson(reminderModel));
     }
 
-    private int generateReminderId() {
+    private synchronized int generateReminderId() {
         int id = preferences.getInt(REMINDER_ID, 0);
         setInt(REMINDER_ID, id + 1);
         return id + 1;
