@@ -2,7 +2,6 @@ package com.amazon.reminder.helper;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.PowerManager;
 import android.preference.PreferenceManager;
 
 import com.amazon.reminder.model.ReminderModel;
@@ -12,7 +11,6 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import roboguice.inject.ContextSingleton;
 
@@ -30,23 +28,16 @@ public class SharedPreferenceHelper {
         this.gson = gson;
     }
 
-    public long getKey() {
-        return preferences.getLong("key", 0);
-    }
-    public void setKey(long key) {
-        setLong("key", key);
-    }
-
-    private void setLong(final String key, final long value) {
+    private void setInt(final String key, final int value) {
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putLong(key, value);
-        commitEditor(editor, "Long key : " + key + ", value : " + value);
+        editor.putInt(key, value);
+        commitEditor(editor, "Int key : " + key + ", value : " + value);
     }
 
     private void setString(final String key, final String value) {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString(key, value);
-        commitEditor(editor, "Long key : " + key + ", value : " + value);
+        commitEditor(editor, "key : " + key + ", value : " + value);
     }
 
     private void commitEditor(SharedPreferences.Editor editor, String info) {
@@ -74,9 +65,9 @@ public class SharedPreferenceHelper {
         setString(REMINDER_PREFIX + reminderModel.getId(), gson.toJson(reminderModel));
     }
 
-    public long generateReminderId() {
-        long id = preferences.getLong(REMINDER_ID, 0);
-        setLong(REMINDER_ID, id + 1);
+    private int generateReminderId() {
+        int id = preferences.getInt(REMINDER_ID, 0);
+        setInt(REMINDER_ID, id + 1);
         return id + 1;
     }
 

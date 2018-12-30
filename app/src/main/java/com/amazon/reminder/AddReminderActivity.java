@@ -2,20 +2,20 @@ package com.amazon.reminder;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.app.job.JobService;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TimePicker;
-import android.widget.Toast;
 import android.widget.Toolbar;
 
+import com.amazon.reminder.helper.ReminderJobHelper;
 import com.amazon.reminder.helper.SharedPreferenceHelper;
 import com.amazon.reminder.model.ReminderModel;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import java.util.Calendar;
 
@@ -38,13 +38,17 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
 
     @Inject Gson gson;
     @Inject SharedPreferenceHelper sharedPreferenceHelper;
+    @Inject ReminderJobHelper reminderJobHelper;
 
     private ReminderModel reminderModel;
+    private Injector injector;
+    private int startHashCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_reminder);
+        injector = ((ReminderApplication) getApplicationContext()).getInjector();
         setActionBar(toolbar);
         getActionBar().setDisplayHomeAsUpEnabled(true);
         reminderModel = importModel();
@@ -65,16 +69,19 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
     }
 
     private ReminderModel importModel() {
+        ReminderModel model;
         String mode = getIntent().getStringExtra(REMINDER_MODE);
         if (mode.equals(REMINDER_MODE_EDIT)) {
 
             ReminderModel reminderModel = gson.fromJson(getIntent().getStringExtra(REMINDER_MODEL_STRING),
                     ReminderModel.class);
-            fillEditor(reminderModel);
-            return reminderModel;
+            model = reminderModel;
         } else {
-            return new ReminderModel();
+            model = injector.getInstance(ReminderModel.class);
         }
+        fillEditor(model);
+        startHashCode = model.getTimeHashCode();
+        return model;
     }
 
     private void fillEditor(ReminderModel reminderModel) {
@@ -92,18 +99,11 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
     public void addDate(View view) {
         datePickerDialog.show();
         datePickerDialog.getDatePicker().setMinDate(Calendar.getInstance().getTimeInMillis());
-        //dpg.setOnDateSetListener(this);
-        // If you're calling this from a support Fragment
-        //dpd.show(getFra, "Datepickerdialog");
     }
 
     @Override
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-        int oldHashCode = reminderModel.hashCode();
         reminderModel.setDateValue(year, month + 1, dayOfMonth);
-        if (reminderModel.hashCode() != oldHashCode) {
-            Toast.makeText(this, "Time changed" + year + "\t" + month + "\t" + dayOfMonth, 1000).show();
-        }
         fillEditor(reminderModel);
     }
 
@@ -113,11 +113,7 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
 
     @Override
     public void onTimeSet(TimePicker timePicker, int hour, int minute) {
-        int oldHashCode = reminderModel.hashCode();
         reminderModel.setTime(hour, minute);
-        if (reminderModel.hashCode() != oldHashCode) {
-            Toast.makeText(this, "Time changed " + hour + "\t" + minute, 1000).show();
-        }
         fillEditor(reminderModel);
     }
 
@@ -130,9 +126,12 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
     }
 
     public void saveReminder(View view) {
-        reminderModel.setTitle(editTitle.getText().toString().trim());
-        sharedPreferenceHelper.saveReminder(reminderModel);
-        reminderModel.setEnabled(true);
+        if (reminderModel.getTimeHashCode() != startHashCode) {
+            reminderModel.setTitle(editTitle.getText().toString().trim());
+            sharedPreferenceHelper.saveReminder(reminderModel);
+            reminderModel.setEnabled(true);
+            reminderJobHelper.triggerReminder(reminderModel);
+        }
         finish();
     }
 

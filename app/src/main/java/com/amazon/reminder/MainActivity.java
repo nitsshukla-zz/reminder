@@ -58,8 +58,6 @@ public class MainActivity extends RoboActivity {
     }
 
     public void addReminder(View view) {
-        Toast.makeText(getApplicationContext(), "key: "+sharedPreferenceHelper.getKey(),
-                Toast.LENGTH_LONG).show();
         Intent intent = new Intent(getApplicationContext(), AddReminderActivity.class);
         intent.putExtra(REMINDER_MODE, REMINDER_MODE_NEW);
         startActivity(intent);

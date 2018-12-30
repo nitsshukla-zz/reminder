@@ -1,20 +1,19 @@
 package com.amazon.reminder.model;
 
-import android.util.Log;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
 
 public class ReminderModel {
-    private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-    private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+    private final static SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    private final static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+    private final static SimpleDateFormat completeFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
 
     private String title;
     private Date date;
     private Date time;
-    private Long id = null;
+    private Integer id = null;
     private boolean enabled = true;
 
     public boolean isEnabled() {
@@ -79,23 +78,29 @@ public class ReminderModel {
         this.title = title;
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
     public String getDateInString() {
-        Log.i("amazon", ""+date);
-        Log.i("amazon", ""+time);
         return dateFormat.format(date) + " " +
                 timeFormat.format(time);
     }
 
-    @Override
-    public int hashCode() {
-
+    public int getTimeHashCode() {
         return Objects.hash(date, time);
+    }
+
+    public Date getCompleteDate() {
+        String date =  getDateInString();
+        try {
+            return completeFormat.parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Unexpected parse error");
+        }
     }
 }
