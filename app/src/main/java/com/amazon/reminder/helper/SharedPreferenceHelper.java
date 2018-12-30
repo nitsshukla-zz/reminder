@@ -9,6 +9,8 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +61,9 @@ public class SharedPreferenceHelper {
                 }
             }
         }
+        Collections.sort(reminderModels, (a,b) ->
+             a.getCompleteDate().compareTo(b.getCompleteDate())
+        );
         return reminderModels;
     }
 

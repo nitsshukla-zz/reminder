@@ -1,5 +1,7 @@
 package com.amazon.reminder.model;
 
+import android.util.Log;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -26,6 +28,21 @@ public class ReminderModel {
         this.enabled = enabled;
     }
 
+    public Calendar getCompleteTime() {
+        String timeString = getTime();
+        if (timeString == null) {
+            return null;
+        }
+        try {
+            Calendar cal = new GregorianCalendar();
+            cal.setTime(timeFormat.parse(timeString));
+            return cal;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            Log.e("amazon", "getCompleteTime: ", e);
+        }
+        return null;
+    }
     public String getTime() {
         if (time == null) {
             return null;

@@ -6,8 +6,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.os.PersistableBundle;
 
+import com.amazon.reminder.activity.AddReminderActivity;
 import com.amazon.reminder.model.ReminderModel;
 import com.amazon.reminder.service.ReminderService;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 
 import java.util.Calendar;
@@ -17,11 +19,13 @@ public class ReminderJobHelper {
     public static final String TITLE_TAG = "title";
     private final ComponentName jobServiceComponent;
     private final JobScheduler jobScheduler;
+    private final Gson gson;
 
     @Inject
-    public ReminderJobHelper(JobScheduler jobScheduler, Context mContext) {
+    public ReminderJobHelper(JobScheduler jobScheduler, Context mContext, Gson gson) {
         this.jobServiceComponent = new ComponentName(mContext, ReminderService.class);
         this.jobScheduler = jobScheduler;
+        this.gson = gson;
     }
 
     public void triggerReminder(ReminderModel reminderModel) {
@@ -36,7 +40,7 @@ public class ReminderJobHelper {
     }
     private JobInfo.Builder getTemplateBuilder(ReminderModel reminderModel) {
         PersistableBundle bundle = new PersistableBundle();
-        bundle.putString(TITLE_TAG, reminderModel.getTitle());
+        bundle.putString(AddReminderActivity.REMINDER_MODEL_STRING, gson.toJson(reminderModel));
         return new JobInfo.Builder(reminderModel.getId(), jobServiceComponent)
                 .setPersisted(true)
                 .setExtras(bundle);

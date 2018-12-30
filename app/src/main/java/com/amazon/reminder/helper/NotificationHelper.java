@@ -8,6 +8,7 @@ import android.content.Intent;
 
 import com.amazon.reminder.activity.MainActivity;
 import com.amazon.reminder.R;
+import com.amazon.reminder.model.ReminderModel;
 import com.google.inject.Inject;
 
 public class NotificationHelper {
@@ -20,7 +21,7 @@ public class NotificationHelper {
         this.mNotificationManager = mNotificationManager;
     }
 
-    public void notify(String title) {
+    public void notify(ReminderModel model) {
         PendingIntent pendingIntentForNotification = PendingIntent.getActivity(
                 mContext.getApplicationContext(),
                 0,
@@ -28,11 +29,10 @@ public class NotificationHelper {
                 PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notification = new Notification.Builder(mContext)
                 .setContentTitle("Reminder")
-                .setContentText(title)
+                .setContentText(model.getTitle())
                 .setSmallIcon(R.drawable.ic_baseline_alarm_on)
-                .setAutoCancel(true)
                 .setContentIntent(pendingIntentForNotification)
                 .build();
-        mNotificationManager.notify(1, notification);
+        mNotificationManager.notify(model.getId(), notification);
     }
 }

@@ -22,12 +22,6 @@ public class ReminderModule extends AbstractModule {
     }
 
     @Provides
-    @Singleton
-    public RecyclerView.LayoutManager getLayoutManager() {
-        return new LinearLayoutManager(mContext);
-    }
-
-    @Provides
     public JobScheduler getJobScheduler() {
         return  (JobScheduler) mContext.getSystemService(Context.JOB_SCHEDULER_SERVICE);
     }

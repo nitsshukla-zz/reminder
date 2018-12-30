@@ -45,7 +45,6 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
 
     private ReminderModel reminderModel;
     private Injector injector;
-    private int startHashCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,44 +53,47 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
         injector = ((ReminderApplication) getApplicationContext()).getInjector();
         setActionBar(toolbar);
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        reminderModel = importModel();
+        importModel();
     }
 
     /**
      * TODO: Need to set time to discourage back-dated time set.
      */
-    private void setDateTimePicker() {
+    private void setDateTimePicker(ReminderModel model) {
         final Calendar cal= Calendar.getInstance();
         int pYear = cal.get(Calendar.YEAR);
         int pMonth = cal.get(Calendar.MONTH);
         int pDay = cal.get(Calendar.DAY_OF_MONTH);
         int hour = cal.get(Calendar.HOUR);
         int min = cal.get(Calendar.MINUTE);
-
+        if (model.getDateValue() != null) {
+            Calendar calendar = model.getCompleteDate();
+            if (calendar != null) {
+                pYear = calendar.get(Calendar.YEAR);
+                pMonth = calendar.get(Calendar.MONTH);
+                pDay = calendar.get(Calendar.DAY_OF_MONTH);
+            }
+        }
         datePickerDialog = new DatePickerDialog(
-                this, this, pYear, pMonth, pDay);
+                    this, this, pYear, pMonth, pDay);
         timePickerDialog = new TimePickerDialog(this, this,
                 hour, min, true);
 
     }
 
-    private ReminderModel importModel() {
-        ReminderModel model;
+    private void importModel() {
         String mode = getIntent().getStringExtra(REMINDER_MODE);
         if (mode.equals(REMINDER_MODE_EDIT)) {
 
-            ReminderModel reminderModel = gson.fromJson(getIntent().getStringExtra(REMINDER_MODEL_STRING),
+            reminderModel = gson.fromJson(getIntent().getStringExtra(REMINDER_MODEL_STRING),
                     ReminderModel.class);
-            model = reminderModel;
         } else {
-            model = injector.getInstance(ReminderModel.class);
+            reminderModel = injector.getInstance(ReminderModel.class);
         }
-        fillEditor(model);
-        startHashCode = model.getTimeHashCode();
-        return model;
+        fillEditor();
     }
 
-    private void fillEditor(ReminderModel reminderModel) {
+    private void fillEditor() {
         if (reminderModel.getTime() != null && !reminderModel.getTime().isEmpty()) {
             editTime.setText(reminderModel.getTime());
         }
@@ -104,7 +106,7 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
     }
 
     public void addDate(View view) {
-        setDateTimePicker();
+        setDateTimePicker(reminderModel);
         datePickerDialog.show();
         datePickerDialog.getDatePicker().setMinDate(Calendar.getInstance().getTimeInMillis());
     }
@@ -112,18 +114,27 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
     @Override
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
         reminderModel.setDateValue(year, month + 1, dayOfMonth);
-        fillEditor(reminderModel);
+        fillEditor();
     }
 
     public void addTime(View view) {
-        setDateTimePicker();
+        if (reminderModel.getTime() != null) {
+            Calendar calendar = reminderModel.getCompleteDate();
+            timePickerDialog = new TimePickerDialog(this, this,
+                    calendar.get(Calendar.HOUR),
+                    calendar.get(Calendar.MINUTE),
+                    true);
+        }
+        /**
+         * BUG: On the UI it shows 11:xx but the value is 23:xx
+         */
         timePickerDialog.show();
     }
 
     @Override
     public void onTimeSet(TimePicker timePicker, int hour, int minute) {
         reminderModel.setTime(hour, minute);
-        fillEditor(reminderModel);
+        fillEditor();
     }
 
     @Override
@@ -140,10 +151,6 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
             sharedPreferenceHelper.saveReminder(reminderModel);
             reminderModel.setEnabled(true);
             reminderJobHelper.triggerReminder(reminderModel);
-
-            if (reminderModel.getTimeHashCode() != startHashCode) {
-                showMessage("Time not changed.");
-            }
             finish();
         } catch (RuntimeException e) {
             //TODO: Don't allow backdate entry for time.

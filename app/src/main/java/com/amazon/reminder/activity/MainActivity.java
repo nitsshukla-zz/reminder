@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,7 +42,6 @@ public class MainActivity extends RoboActivity {
 
     @InjectView(R.id.reminders_list) RecyclerView recyclerView;
     @InjectView(R.id.clearFilter) Button clearFilter;
-    @Inject private RecyclerView.LayoutManager mLayoutManager;
     @Inject private ReminderJobHelper reminderJobHelper;
 
     private AlertDialog searchDialog;
@@ -64,9 +64,7 @@ public class MainActivity extends RoboActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         recyclerView.setHasFixedSize(true);
-        if (!recyclerView.isAttachedToWindow()) {
-            recyclerView.setLayoutManager(mLayoutManager);
-        }
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
     public void addReminder(View view) {
