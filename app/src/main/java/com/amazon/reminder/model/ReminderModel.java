@@ -2,7 +2,9 @@ package com.amazon.reminder.model;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Objects;
 
 public class ReminderModel {
@@ -86,6 +88,9 @@ public class ReminderModel {
     }
 
     public String getDateInString() {
+        if (date == null || time == null) {
+            return null;
+        }
         return dateFormat.format(date) + " " +
                 timeFormat.format(time);
     }
@@ -94,13 +99,47 @@ public class ReminderModel {
         return Objects.hash(date, time);
     }
 
-    public Date getCompleteDate() {
-        String date =  getDateInString();
+    public Calendar getCompleteDate() {
+        String dateStr =  getDateInString();
+        if (dateStr == null) {
+            return null;
+        }
         try {
-            return completeFormat.parse(date);
+            Date date = completeFormat.parse(dateStr);
+            Calendar calendar = new GregorianCalendar();
+            calendar.setTime(date);
+            return calendar;
         } catch (ParseException e) {
             e.printStackTrace();
             throw new RuntimeException("Unexpected parse error");
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ReminderModel that = (ReminderModel) o;
+        return enabled == that.enabled &&
+                Objects.equals(title, that.title) &&
+                Objects.equals(date, that.date) &&
+                Objects.equals(time, that.time) &&
+                Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, date, time, id, enabled);
+    }
+
+    @Override
+    public String toString() {
+        return "ReminderModel{" +
+                "title='" + title + '\'' +
+                ", date=" + date +
+                ", time=" + time +
+                ", id=" + id +
+                ", enabled=" + enabled +
+                '}';
     }
 }

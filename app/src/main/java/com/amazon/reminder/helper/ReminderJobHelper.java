@@ -26,7 +26,10 @@ public class ReminderJobHelper {
 
     public void triggerReminder(ReminderModel reminderModel) {
         JobInfo.Builder jobBuilder = getTemplateBuilder(reminderModel);
-        long diff = reminderModel.getCompleteDate().getTime() - Calendar.getInstance().getTime().getTime();
+        long diff = reminderModel.getCompleteDate().getTime().getTime() - Calendar.getInstance().getTime().getTime();
+        if (diff < 0 ) {
+            throw new RuntimeException("Back dated entry not allowed.");
+        }
         jobBuilder.setOverrideDeadline(diff);
         jobBuilder.setMinimumLatency(TimeUnit.MINUTES.toMillis(1));
         jobScheduler.schedule(jobBuilder.build());
@@ -37,5 +40,8 @@ public class ReminderJobHelper {
         return new JobInfo.Builder(reminderModel.getId(), jobServiceComponent)
                 .setPersisted(true)
                 .setExtras(bundle);
+    }
+    public void cancelJob(ReminderModel reminderModel) {
+        jobScheduler.cancel(reminderModel.getId());
     }
 }

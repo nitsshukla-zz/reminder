@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TimePicker;
+import android.widget.Toast;
 import android.widget.Toolbar;
 
 import com.amazon.reminder.R;
@@ -54,20 +55,24 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
         setActionBar(toolbar);
         getActionBar().setDisplayHomeAsUpEnabled(true);
         reminderModel = importModel();
-        setDateTimePicker(reminderModel);
     }
 
-    private void setDateTimePicker(ReminderModel reminderModel) {
-        final Calendar c = Calendar.getInstance();
-        int pYear = c.get(Calendar.YEAR);
-        int pMonth = c.get(Calendar.MONTH);
-        int pDay = c.get(Calendar.DAY_OF_MONTH);
-        int hour = c.get(Calendar.HOUR);
-        int min = c.get(Calendar.MINUTE);
+    /**
+     * TODO: Need to set time to discourage back-dated time set.
+     */
+    private void setDateTimePicker() {
+        final Calendar cal= Calendar.getInstance();
+        int pYear = cal.get(Calendar.YEAR);
+        int pMonth = cal.get(Calendar.MONTH);
+        int pDay = cal.get(Calendar.DAY_OF_MONTH);
+        int hour = cal.get(Calendar.HOUR);
+        int min = cal.get(Calendar.MINUTE);
+
         datePickerDialog = new DatePickerDialog(
                 this, this, pYear, pMonth, pDay);
         timePickerDialog = new TimePickerDialog(this, this,
                 hour, min, true);
+
     }
 
     private ReminderModel importModel() {
@@ -99,6 +104,7 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
     }
 
     public void addDate(View view) {
+        setDateTimePicker();
         datePickerDialog.show();
         datePickerDialog.getDatePicker().setMinDate(Calendar.getInstance().getTimeInMillis());
     }
@@ -110,6 +116,7 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
     }
 
     public void addTime(View view) {
+        setDateTimePicker();
         timePickerDialog.show();
     }
 
@@ -128,13 +135,26 @@ public class AddReminderActivity extends RoboActivity implements DatePickerDialo
     }
 
     public void saveReminder(View view) {
-        if (reminderModel.getTimeHashCode() != startHashCode) {
+        try {
             reminderModel.setTitle(editTitle.getText().toString().trim());
             sharedPreferenceHelper.saveReminder(reminderModel);
             reminderModel.setEnabled(true);
             reminderJobHelper.triggerReminder(reminderModel);
+
+            if (reminderModel.getTimeHashCode() != startHashCode) {
+                showMessage("Time not changed.");
+            }
+            finish();
+        } catch (RuntimeException e) {
+            //TODO: Don't allow backdate entry for time.
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+            return;
         }
-        finish();
+
+    }
+
+    private void showMessage(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     public void deleteReminder(View view) {

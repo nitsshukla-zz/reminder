@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amazon.reminder.R;
+import com.amazon.reminder.helper.ReminderJobHelper;
 import com.amazon.reminder.helper.SharedPreferenceHelper;
 import com.amazon.reminder.model.ReminderModel;
 import com.google.gson.Gson;
@@ -41,9 +41,11 @@ public class MainActivity extends RoboActivity {
 
     @InjectView(R.id.reminders_list) RecyclerView recyclerView;
     @InjectView(R.id.clearFilter) Button clearFilter;
-    private RecyclerView.Adapter mAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
+    @Inject private RecyclerView.LayoutManager mLayoutManager;
+    @Inject private ReminderJobHelper reminderJobHelper;
+
     private AlertDialog searchDialog;
+    private RecyclerView.Adapter mAdapter;
 
     @Override
     protected void onResume() {
@@ -62,9 +64,9 @@ public class MainActivity extends RoboActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         recyclerView.setHasFixedSize(true);
-        // use a linear layout manager
-        mLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(mLayoutManager);
+        if (!recyclerView.isAttachedToWindow()) {
+            recyclerView.setLayoutManager(mLayoutManager);
+        }
     }
 
     public void addReminder(View view) {
@@ -81,8 +83,25 @@ public class MainActivity extends RoboActivity {
     }
 
     public void toggleReminder(ImageView view, ReminderModel reminder) {
-        Toast.makeText(this, ""+ reminder.isEnabled(),1000).show();
         reminder.setEnabled(!reminder.isEnabled());
+        if (reminder.isEnabled()) {
+            try {
+                reminderJobHelper.triggerReminder(reminder);
+            } catch (RuntimeException e) {
+                showMessage("Backdate entry not allowed.");
+            }
+        } else {
+            reminderJobHelper.cancelJob(reminder);
+        }
+        changeAlarmImage(view, reminder);
+        sharedPreferenceHelper.saveReminder(reminder);
+    }
+
+    private void showMessage(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    private void changeAlarmImage(ImageView view, ReminderModel reminder) {
         if (reminder.isEnabled()) {
             view.setImageDrawable(getResources().getDrawable(R.drawable.ic_baseline_alarm_on));
         } else {
@@ -91,7 +110,7 @@ public class MainActivity extends RoboActivity {
     }
 
     public void searchReminder(View view) {
-        EditText editText = (EditText) searchDialog.findViewById(R.id.searchText);
+        EditText editText = searchDialog.findViewById(R.id.searchText);
         String text = editText.getText().toString();
         listReminders(text);
         clearFilter.setVisibility(View.VISIBLE);
@@ -118,7 +137,7 @@ public class MainActivity extends RoboActivity {
         clearFilter.setVisibility(View.INVISIBLE);
     }
 
-    static class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.MyViewHolder> {
+    static class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.RecyclerReminderHolder> {
         private List<ReminderModel> reminders;
         private MainActivity mainActivity;
 
@@ -130,10 +149,10 @@ public class MainActivity extends RoboActivity {
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
         // you provide access to all the views for a data item in a view holder
-        static class MyViewHolder extends RecyclerView.ViewHolder {
+        static class RecyclerReminderHolder extends RecyclerView.ViewHolder {
             // each data item is just a string in this case
             private RelativeLayout relativeLayout;
-            MyViewHolder(RelativeLayout v) {
+            RecyclerReminderHolder(RelativeLayout v) {
                 super(v);
                 relativeLayout = v;
             }
@@ -141,17 +160,17 @@ public class MainActivity extends RoboActivity {
 
         // Create new views (invoked by the layout manager)
         @Override
-        public ReminderAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent,
-                                                               int viewType) {
+        public RecyclerReminderHolder onCreateViewHolder(ViewGroup parent,
+                                                         int viewType) {
             // create a new view
             RelativeLayout v = (RelativeLayout) LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.reminder, parent, false);
-            return new ReminderAdapter.MyViewHolder(v);
+            return new RecyclerReminderHolder(v);
         }
 
         // Replace the contents of a view (invoked by the layout manager)
         @Override
-        public void onBindViewHolder(ReminderAdapter.MyViewHolder holder, int position) {
+        public void onBindViewHolder(RecyclerReminderHolder holder, int position) {
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
             //holder.mTextView.setText(mDataset[position]);
@@ -167,10 +186,16 @@ public class MainActivity extends RoboActivity {
                 mainActivity.editReminder(reminder);
             });
 
+            /**
+             * TODO: Badk-dated reminders can be disabled.
+             */
+
             ImageView img = holder.relativeLayout.findViewById(R.id.toggleImgReminder);
             img.setOnClickListener((view) -> {
                 mainActivity.toggleReminder(img, reminder);
             });
+            mainActivity.changeAlarmImage(img, reminder);
+            System.out.println(reminder);
         }
 
         // Return the size of your dataset (invoked by the layout manager)
